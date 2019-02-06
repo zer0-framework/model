@@ -60,7 +60,7 @@ trait Validator
             foreach (static::$rules as $field => $rules) {
                 try {
                     $value = $this->data[$field] ?? null;
-                    $this->fieldValidate($field, $value, static::$implicitRules);
+                    $this->fieldValidate($field, $value);
                 } catch (\Exception $e) {
                     if ($this->exceptionsBundle === null) {
                         throw $e;
@@ -100,21 +100,14 @@ trait Validator
             }
             $fieldRulesParsed = static::parseFieldRules(static::$rules[$field]);
         }
+
         if ($value === null) {
-            $requiredFound = false;
-            foreach ($fieldRulesParsed as $rule) {
-                list($ruleName, $parameters) = $rule;
-                if (strpos($ruleName, 'Required') === 0) {
-                    $requiredFound = true;
-                    break;
-                }
-            }
-            if (!$requiredFound) {
-                return;
-            }
+            $onlyTypes = static::$implicitRules;
         }
+
         foreach ($fieldRulesParsed as $rule) {
             list($ruleName, $parameters) = $rule;
+            
             if ($onlyTypes && !in_array($ruleName, $onlyTypes)) {
                 continue;
             }
