@@ -785,7 +785,7 @@ class Generic extends \Zer0\Model\Expressions\Generic
             if (!$storage instanceof ReadableInterface) {
                 continue;
             }
-            if (($result = $storage->fetch($cond, $fields, $orderBy, $offset, $limit, $innerJoins)) !==
+            if (($result = $storage->fetch($cond, $fields, $orderBy, $offset, $limit, $innerJoins, $groupBy)) !==
                 null
             ) {
                 $result = new ResultList($result);
