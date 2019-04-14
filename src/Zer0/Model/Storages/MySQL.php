@@ -2,6 +2,7 @@
 
 namespace Zer0\Model\Storages;
 
+use PHPDaemon\Clients\MySQL\Connection;
 use Zer0\App;
 use Zer0\Drivers\PDO\PDO;
 use Zer0\Model\Expressions\Conditions\Generic as GenericCond;
@@ -54,7 +55,7 @@ class MySQL extends Generic implements ReadableInterface
     public function init()
     {
         $this->sql = App::instance()->broker('PDO')->get($this->pdoName);
-        if (defined('IPENV_ASYNC')) {
+        if (defined('ZERO_ASYNC')) {
             $this->sqlAsync = App::instance()->broker('PDOAsync')->get($this->pdoName);
         }
     }
@@ -90,13 +91,13 @@ class MySQL extends Generic implements ReadableInterface
      * Retrieve data from table
      *
      * @param GenericCond $where WHERE clause
-     * @param  array $fields Fields to fetch.
-     * @param  OrderByClause $orderBy = null ORDER BY clause
-     * @param  integer $offset = 0 Offset
-     * @param  integer $limit = PHP_INT_MAX
-     * @param  array $innerJoins = []
-     * @param  GroupByClause $groupBy = null GROUP BY clause
-     * @param  callable $cb = null Callback
+     * @param array $fields Fields to fetch.
+     * @param OrderByClause $orderBy = null ORDER BY clause
+     * @param integer $offset = 0 Offset
+     * @param integer $limit = PHP_INT_MAX
+     * @param array $innerJoins = []
+     * @param GroupByClause $groupBy = null GROUP BY clause
+     * @param callable $cb = null Callback
      * @return array|null Array of objects OR null
      * @throws \Exception
      * @callback $cb (array|null $objects Array ob objects OR null)
@@ -110,7 +111,8 @@ class MySQL extends Generic implements ReadableInterface
         $innerJoins = [],
         $groupBy = null,
         $cb = null
-    ) {
+    )
+    {
         // @TODO: $innerJoins
         if ($innerJoins) {
             if ($cb !== null) {
@@ -145,7 +147,7 @@ class MySQL extends Generic implements ReadableInterface
      * Delete rows from table
      *
      * @param GenericCond $where
-     * @param  callable $cb = null Callback
+     * @param callable $cb = null Callback
      * @return null|integer Number of deleted objects
      * @throws \Exception
      * @callback $cb (integer $affectedRows)
@@ -171,10 +173,10 @@ class MySQL extends Generic implements ReadableInterface
      * Score field(s) are also determined by the storages config array ('score' values), and
      * converted to string from $data.
      *
-     * @param  array $data Field => value array with object data
-     * @param  boolean $upsertMode = false
-     * @param  callable $cb = null Callback
-     * @return void
+     * @param array $data Field => value array with object data
+     * @param boolean $upsertMode = false
+     * @param callable $cb = null Callback
+     * @return void|int affected rows
      * @throws \Exception
      * @callback $cb (integer $affectedRows)
      */
@@ -210,14 +212,25 @@ class MySQL extends Generic implements ReadableInterface
 
         if ($cb !== null) {
             $plainSql = $this->sql->replacePlaceholders($query, $values);
-            $this->sqlAsync->getConnection(function ($sql) use ($plainSql, $cb) {
-                $sql->query($plainSql, function ($sql) use ($cb) {
+            $this->sqlAsync->getConnection(function (Connection $sql) use ($plainSql, $cb) {
+                $sql->query($plainSql, function (Connection $sql) use ($cb) {
+                    if ($this->primaryKey !== null) {
+                        $this->lastReturning = [
+                            $this->primaryKey => $sql->insertId,
+                        ];
+                    }
                     $cb($sql->affectedRows);
                 });
             });
             return;
         }
-        $this->sql->query($query, $values);
+        $stmt = $this->sql->query($query, $values);
+        if ($this->primaryKey !== null) {
+            $this->lastReturning = [
+                $this->primaryKey => $this->sql->lastInsertId($this->primaryKey),
+            ];
+        }
+        return $stmt->rowCount();
     }
 
     /**
@@ -225,9 +238,9 @@ class MySQL extends Generic implements ReadableInterface
      * but rather number a single UPDATE statement containing various operations on the fields in rows
      * matching $where.
      *
-     * @param  \Zer0\Model\Expressions\Conditions\Generic $where Condition
-     * @param  array $updatePlan Transaction plan — https://docs.mongodb.org/manual/reference/operator/update/#id1
-     * @param  callable $cb = null Callback
+     * @param \Zer0\Model\Expressions\Conditions\Generic $where Condition
+     * @param array $updatePlan Transaction plan — https://docs.mongodb.org/manual/reference/operator/update/#id1
+     * @param callable $cb = null Callback
      * @return boolean|null Success
      * @throws \Exception
      * @callback $cb (integer $affectedRows)
@@ -285,7 +298,7 @@ class MySQL extends Generic implements ReadableInterface
 
     /**
      * Begin a transaction
-     * @param  callable $cb = null Callback
+     * @param callable $cb = null Callback
      * @callback $cb ( $this )
      */
     public function begin($cb = null)
@@ -304,7 +317,7 @@ class MySQL extends Generic implements ReadableInterface
 
     /**
      * Commit a transaction
-     * @param  callable $cb = null Callback
+     * @param callable $cb = null Callback
      * @callback $cb (boolean $success)
      */
     public function commit($cb = null)
@@ -327,7 +340,7 @@ class MySQL extends Generic implements ReadableInterface
 
     /**
      * Rollback a transaction
-     * @param  callable $cb = null Callback
+     * @param callable $cb = null Callback
      * @callback $cb (boolean $success)
      */
     public function rollback($cb = null)
@@ -350,11 +363,11 @@ class MySQL extends Generic implements ReadableInterface
     /**
      * Return the number of matched rows
      *
-     * @param  \Zer0\Model\Expressions\Conditions\Generic $where
-     * @param  integer $limit = null
-     * @param  array $innerJoins = []
+     * @param \Zer0\Model\Expressions\Conditions\Generic $where
+     * @param integer $limit = null
+     * @param array $innerJoins = []
      * @param GroupByClause $groupBy = null GROUP BY clause
-     * @param  callable $cb = null Callback
+     * @param callable $cb = null Callback
      * @return integer|null
      * @throws \Exception
      * @callback $cb (integer $affectedRows)

@@ -1665,7 +1665,10 @@ abstract class Generic implements \ArrayAccess, \IteratorAggregate, \Countable
                             $storage->create(
                                 $this->data,
                                 $this->upsertMode,
-                                function ($res) use ($jobname, $cj) {
+                                function ($res) use ($jobname, $cj, $storage) {
+                                    if ($storage->lastReturning ?? false) {
+                                        $this->data = array_merge($this->data, $storage->lastReturning);
+                                    }
                                     $cj[$jobname] = $res;
                                 }
                             );
@@ -1683,8 +1686,10 @@ abstract class Generic implements \ArrayAccess, \IteratorAggregate, \Countable
             foreach ($this->indexes() as $index) {
                 $index->onCreate($this->data, $this->upsertMode);
             }
+
+            $this->affected = 0;
             foreach ($this->storages(true) as $storage) {
-                $storage->create($this->data, $this->upsertMode);
+                $this->affected = max($this->affected, $storage->create($this->data, $this->upsertMode));
                 if ($storage->lastReturning ?? false) {
                     $this->data = array_merge($this->data, $storage->lastReturning);
                 }
