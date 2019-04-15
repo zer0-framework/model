@@ -1598,7 +1598,8 @@ abstract class Generic implements \ArrayAccess, \IteratorAggregate, \Countable
                 $cb($this);
             });
             $cj->maxConcurrency(1); // Only one task shall be running simultaneously.
-            if ($this->multiMode || !$this->new) {
+
+            if (!$this->new) {
                 if (!$this->multiMode) {
                     $this->beforeSave();
                 }
@@ -1655,6 +1656,7 @@ abstract class Generic implements \ArrayAccess, \IteratorAggregate, \Countable
                             );
                         };
                     }
+
                     // Iterating over storages
                     foreach ($this->storages(true) as $k => $storage) {
                         if (isset($cj->vars['failed'])) {
