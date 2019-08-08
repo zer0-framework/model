@@ -61,7 +61,9 @@ trait RedisBase
     {
         parent::init();
         $this->redis = App::instance()->broker('Redis')->get($this->shard);
-        $this->redisAsync = App::instance()->broker('RedisAsync')->get($this->shard);
+        if (defined('ZERO_ASYNC')) {
+            $this->redisAsync = App::instance()->broker('RedisAsync')->get($this->shard);
+        }
     }
 
     /**

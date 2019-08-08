@@ -78,6 +78,12 @@ abstract class Generic implements \ArrayAccess, \IteratorAggregate, \Countable
     protected static $indexesConf = [];
     /** @var \Zer0\Model\Indexes\AbstractIndex[] */
     protected static $indexes = [];
+
+    /**
+     * @var boolean
+     */
+    protected static $dynamicFields = false;
+    
     /**
      * Default field/callback pairs for withVirtualFields()
      * ['fieldName' => callback, ...]
@@ -966,8 +972,10 @@ abstract class Generic implements \ArrayAccess, \IteratorAggregate, \Countable
         $fields = (array)$fields;
         $this->fields = [];
         foreach ($fields as $field) {
-            if (!isset(static::$rules[$field])) {
-                continue; // @TODO: throw an exception?
+            if (!static::$dynamicFields) {
+                if (!isset(static::$rules[$field])) {
+                    continue; // @TODO: throw an exception?
+                }
             }
             $this->fields[] = $field;
         }
