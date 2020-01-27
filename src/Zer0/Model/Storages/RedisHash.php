@@ -92,11 +92,11 @@ class RedisHash extends Generic implements ReadableInterface
         $objects = $this->redis->pipeline(function (PipelineInterface $pipeline) use ($fields, $ids) {
             if (count($fields)) {
                 foreach ($ids as $id) {
-                    $this->redis->hmget($this->prefix . $id, $fields);
+                    $pipeline->hmget($this->prefix . $id, $fields);
                 }
             } else {
                 foreach ($ids as $id) {
-                    $this->redis->hgetall($this->prefix . $id);
+                    $pipeline->hgetall($this->prefix . $id);
                 }
             }
         });
