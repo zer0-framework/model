@@ -394,24 +394,62 @@ class Generic extends \Zer0\Model\Expressions\Generic
                     $val = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
                 }
                 $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' = ' . $val;
-            } elseif (isset($val['$eq'])) {
-                if (is_scalar($val['$eq'])) {
-                    $this->values[] = $val['$eq'];
-                    $val = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
+            } else {
+                foreach ($val as $operator => $value) {
+                    if ($operator === '$eq') {
+                        if (is_scalar($value)) {
+                            $this->values[] = $value;
+                            $value = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
+                        }
+                        $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' = ' . $value;
+                    } elseif ($operator === '$neq') {
+                        if (is_scalar($value)) {
+                            $this->values[] = $value;
+                            $value = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
+                        }
+                        $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' != ' . $value;
+                    } elseif ($key === '$gt') {
+                        if (is_scalar($value)) {
+                            $this->values[] = $value;
+                            $value = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
+                        }
+                        $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' > ' . $value;
+                    } elseif ($operator === '$gte') {
+                        if (is_scalar($value)) {
+                            $this->values[] = $value;
+                            $value = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
+                        }
+                        $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' >= ' . $value;
+                    } elseif ($operator === '$lt') {
+                        if (is_scalar($value)) {
+                            $this->values[] = $value;
+                            $value = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
+                        }
+                        $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' < ' . $value;
+                    }
+                    elseif ($operator === '$lte') {
+                        if (is_scalar($value)) {
+                            $this->values[] = $value;
+                            $value = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
+                        }
+                        $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' <= ' . $value;
+                    } elseif ($operator === '$in') {
+                        if (is_array($value)) {
+                            $this->values[] = $value;
+                            $val = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
+                        }
+                        $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' IN(' . $value . ')';
+                    }
+                    elseif ($operator === '$nin') {
+                        if (is_array($value)) {
+                            $this->values[] = $value;
+                            $val = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
+                        }
+                        $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' NOT IN(' . $value . ')';
+                    } else {
+                        throw new InvalidArgumentException('Not supported operator: ' . $operator);
+                    }
                 }
-                $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' = ' . $val;
-            } elseif (isset($val['$in'])) {
-                if (is_array($val['$in'])) {
-                    $this->values[] = $val['$in'];
-                    $val = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
-                }
-                $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' IN(' . $val . ')';
-            } elseif (isset($val['$nin'])) {
-                if (is_array($val['$nin'])) {
-                    $this->values[] = $val['$in'];
-                    $val = new \Zer0\Model\Subtypes\Placeholder(count($this->values) - 1);
-                }
-                $ret .= ($ret !== '' ? ' AND ' : '') . $key . ' NOT IN(' . $val . ')';
             }
             // @TODO: add missing $ operators
         }

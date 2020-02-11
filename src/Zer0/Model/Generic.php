@@ -1403,8 +1403,8 @@ abstract class Generic implements \ArrayAccess, \IteratorAggregate, \Countable
                                 // then reverse it
                                 unset($mongoNotationOn[$left]);
                                 $mongoNotationOn[(string)$right] = new \Zer0\Model\Subtypes\Field($left);
-                                list($left, $right) = [$right, $left];
-                                list($leftField, $rightField) = [$rightField, $leftField];
+                                [$left, $right] = [$right, $left];
+                                [$leftField, $rightField] = [$rightField, $leftField];
                             }
                             unset($mongoNotationOn[(string)$left]);
                             $mongoNotationOn[$leftField['name']] =
@@ -2092,6 +2092,10 @@ abstract class Generic implements \ArrayAccess, \IteratorAggregate, \Countable
         }
         if ($where instanceof Expressions\Conditions\Generic) {
             $this->where = $where;
+        } elseif (is_array($where)) {
+            $this->where = $this->condition('Generic', null, []);
+            $this->where->updateMongoNotation($where);
+            $this->multiMode = true;
         } else {
             // Called with a more general condition string,
             // e.g. where('id = :ids AND age < :maxage', ['ids' => [1,2,3], 'maxage' = '18'])
