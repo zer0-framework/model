@@ -386,6 +386,9 @@ class Generic extends \Zer0\Model\Expressions\Generic
             }
             return $ret;
         }
+        if (isset($mongoNotation['$raw'])) {
+            return $mongoNotation['$raw'];
+        }
         $ret = '';
         foreach ($mongoNotation as $key => $val) {
             if (!is_array($val)) {
