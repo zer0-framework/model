@@ -97,7 +97,7 @@ class PGSQL extends Generic implements ReadableInterface
     public function getIds(GenericCond $where)
     {
         $ids = [];
-        $stmt = $this->sql->query('SELECT ' . $this->primaryKey
+        $stmt = $this->sql->queryBind('SELECT ' . $this->primaryKey
             . ' FROM ' . $this->table
             . (strlen($where->expr) ? ' WHERE ' . $where->expr : ''), $where->values);
         while ($row = $stmt->fetch()) {
@@ -214,7 +214,7 @@ class PGSQL extends Generic implements ReadableInterface
             return;
         }
 
-        return $this->sql->query($query, $where->values)->fetchAll();
+        return $this->sql->queryBind($query, $where->values)->fetchAll();
     }
 
     /**
@@ -246,7 +246,7 @@ class PGSQL extends Generic implements ReadableInterface
             });
             return;
         }
-        return $this->sql->query($query, $where->values)->rowCount();
+        return $this->sql->queryBind($query, $where->values)->rowCount();
     }
 
     /**
@@ -304,7 +304,7 @@ class PGSQL extends Generic implements ReadableInterface
             });
             return;
         }
-        $stmt = $this->sql->query($query, $values);
+        $stmt = $this->sql->queryBind($query, $values);
         if ($this->primaryKey !== null) {
             $this->lastReturning = $stmt->fetch(PDO::FETCH_ASSOC);
         }
@@ -369,7 +369,7 @@ class PGSQL extends Generic implements ReadableInterface
             return null;
         }
         // @TODO: implement $this->sqlTransaction
-        return $this->sql->query($query)->rowCount();
+        return $this->sql->queryBind($query)->rowCount();
     }
 
     /**
@@ -470,6 +470,6 @@ class PGSQL extends Generic implements ReadableInterface
             return;
         }
 
-        return (int)$this->sql->query($query, $where->values)->fetchColumn();
+        return (int)$this->sql->queryBind($query, $where->values)->fetchColumn();
     }
 }
